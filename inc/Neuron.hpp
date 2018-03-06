@@ -10,17 +10,19 @@ protected:
 	float _input;
 	float _output;
 	float * _weights;
-	float _numWeights;
+	int _numWeights;
 	float _bias;
 
 public:
 	Neuron(int connections) {
+		//std::cout << "neuron constructor called" << std::endl;
 		this->_numWeights = connections;
 		this->_bias = RNG(-1, 1);
 		this->_weights = new float[connections];
 		for (int i = 0; i < connections; i++) {
 			this->_weights[i] = RNG(-1, 1);
 		}
+		//std::cout << "neuron constructor completed" << std::endl;
 	};~Neuron(){};Neuron(){};
 
 	Neuron & operator=(const Neuron & r) {
@@ -28,6 +30,7 @@ public:
 		this->_output = r._output;
 		this->_numWeights = r._numWeights;
 		this->_bias = r._bias;
+		this->_weights = new float[this->_numWeights];
 		for (int i = 0; i < r._numWeights; i++) {
 			this->_weights[i] = r._weights[i];
 		}
@@ -47,6 +50,8 @@ public:
 	}
 
 	float getWeight(int index) {
+		//std::cout << "getting weight" << index << std::endl;
+		//std::cout << this->_weights[index] << std::endl;
 		return this->_weights[index];
 	}
 

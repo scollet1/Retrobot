@@ -11,6 +11,12 @@
 # **************************************************************************** #
 
 NAME = 		ft_retro
+UNITNAME = 	UNIT_TEST
+
+UNITSRC = 	UNIT_main
+UNITHDR = 	NN \
+		Layer \
+		Neuron \
 
 SRC = 		Bullet \
 			Character \
@@ -31,17 +37,32 @@ HDR =		Bullet \
 			Neuron \
 			Layer
 
+UNIT_SRC_DIR =		src/
 SRC_DIR =		src/
+
+UNIT_SRC_C =		$(addsuffix .cpp, $UNITSRC))
 SRC_C =			$(addsuffix .cpp, $(SRC))
+
+UNIT_SRC_FILES =	$(addprefix $(UNIT_SRC_DIR), $(UNIT_SRC_C))
 SRC_FILES =		$(addprefix $(SRC_DIR), $(SRC_C))
 
+UNIT_OBJ_DIR =		obj/
 OBJ_DIR =		obj/
+
+UNIT_OBJ_O =		$(addsuffix .o, $(UNITSRC))
 OBJ_O =			$(addsuffix .o, $(SRC))
+
+UNIT_OBJ_FILES =	$(addprefix $(UNIT_OBJ_DIR), $(UNIT_OBJ_O))
 OBJ_FILES =		$(addprefix $(OBJ_DIR), $(OBJ_O))
 
+UNIT_HDR_DIR =		inc/
 HDR_DIR =		inc/
+
+UNIT_HDR_H =		$(addsuffic .hpp, $(UNITHDR))
 HDR_H =			$(addsuffix .hpp, $(HDR))
-HDR_FILES = 	$(addprefix $(HDR_DIR), $(HDR_H))
+
+UNIT_HDR_FILES =	$(addprefix $(UNIT_HDR_DIR), $(UNIT_HDR_H))
+HDR_FILES =		$(addprefix $(HDR_DIR), $(HDR_H))
 
 CC =			g++
 C_FLAGS =		-Wall -Wextra -Werror
@@ -62,6 +83,17 @@ GREEN_LIGHT_BLINK =	\033[5;92m
 END_COLOUR =		\033[0m
 
 .SILENT:
+
+unit_test: $(UNITNAME)
+
+$(UNITNAME): $(UNIT_OBJ_FILES)
+	@echo "$(YELLOW_LIGHT)$(UNITNAME): $(YELLOW)Compiling $(UNITNAME)...$(END_COLOUR)"
+	@$(CC) $^ -o $@
+	@echo "$(YELLOW_LIGHT)$(UNITNAME): $(GREE)Successfully compiled $(UNITNAME)!$(END_COLOUR)"
+
+$(UNIT_OBJ_DIR)%.o: $(UNIT_SRC_DIR)%.cpp
+	@mkdir -p obj
+	@$(CC) -I $(UNIT_HDR_DIR) -c $< -o $@
 
 all: $(NAME)
 

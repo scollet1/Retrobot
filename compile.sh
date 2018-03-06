@@ -1,1 +1,1 @@
-clear && make re
+clear && make unit_test

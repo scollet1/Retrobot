@@ -44,17 +44,17 @@ void setMapEnemy(Game* game, int enemyType, int y, int x) {
 
 void play(Game *game)
 {
-  int uIn;
-  int eKilled = 0;
+	int uIn;
+	int eKilled = 0;
 	int gameTime = 0;
 	float inputs[4];
-  char pause[] = " GAME PAUSED ";
+	char pause[] = " GAME PAUSED ";
 
   Enemy** _en = new Enemy*[MAX_ENEMIES];
   for (int i = 0; i < MAX_ENEMIES; i++)
     _en[i] = NULL;
 
-  uIn = getch();
+	uIn = getch();
   while (game->getPlayer().getLives())
   {
     usleep(30000);
@@ -62,13 +62,18 @@ void play(Game *game)
     //uIn = getch();
 
     /*
-      NOTE : CAPTURE USER INPUT AND ROUTE COMMANDS
+      NOTE : CAPTURE BOT INPUT AND ROUTE COMMANDS
     */
+
+	//std::cout << "pre-forward" << std::endl;
+
 	inputs[0] = (float)game->getPlayer().getPosY();
 	inputs[1] = (float)game->getPlayer().getPosX();
 	inputs[2] = (float)game->getNearestEnemy((int)inputs[1], (int)inputs[0]);
 	inputs[3] = (float)(game->getPlayer().getBullet(0)->getAliveStatus() == true)?1:0;
-	game->getNN()->forwardPropogate(inputs, gameTime);
+	uIn = (int)game->getNN()->forwardPropogate(inputs, gameTime);
+
+//	std::cout << "uIn = " << uIn << std::endl;
 
     switch (uIn)
     {
@@ -103,14 +108,14 @@ void play(Game *game)
       case 0:
         game->getPlayer().shootBullet();
         break;
-      case 'p':
+      /*case 'p':
     	  attron(COLOR_PAIR(5) | A_BOLD);
     	  mvprintw(game->getMaxY() / 2, (game->getMaxX() - sizeof(pause)) / 2, "%s", pause);
     	  attroff(COLOR_PAIR(5) | A_BOLD);
         do {
           uIn = getch();
         } while(uIn != 'p');
-        break;
+        break;*/
       case KEY_END:
         game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), '*');
         game->getPlayer().triggerDeath();
@@ -304,18 +309,18 @@ void play(Game *game)
       }
     }
     
-  int i;
-  int j;
+	int i;
+	int j;
 
-    if (!game->getPlayer().getAliveStatus()) {
-      for (i = game->getMaxY() - 1; i >= 0; --i)
-        for (j = game->getMaxX() - 1; j >= 0; --j) {
-          game->getEnemy(i, j).setAliveStatus(false);
-        }
+	if (!game->getPlayer().getAliveStatus()) {
+		for (i = game->getMaxY() - 1; i >= 0; --i)
+			for (j = game->getMaxX() - 1; j >= 0; --j) {
+				game->getEnemy(i, j).setAliveStatus(false);
+			}
 	for (i = game->getNN()->getMemories(); i >= 0; i--) {
 		game->getNN()->backwardPropogate(
 		game->getNN()->getMemory(i));
-	} game->getNN()->save();
+	} //game->getNN()->save();
       move(0, 0);
       char deadTextDisp[] = " YOU DIED ";
       char deadTextInst[] = " PRESS R TO RESPAWN OR END TO QUIT ";
@@ -388,9 +393,9 @@ void play(Game *game)
 
 int main(void)
 {
-  int uIn;
-  std::srand(std::time(NULL));
-  initscr();
+	int uIn;
+	std::srand(std::time(NULL));
+	initscr();
   start_color();
 	cbreak();
 	noecho();
@@ -441,7 +446,7 @@ int main(void)
 
     game->setMap(posY, posX, 'A');
 
-    play(game);
+	play(game);
 
   	attron(COLOR_PAIR(7) | A_BOLD);
     mvprintw(maxY / 2, (maxX - sizeof(endTextDisp)) / 2, "%s", endTextDisp);
@@ -461,6 +466,6 @@ int main(void)
       break;
   }
 
-  std::cout << "Thanks for playing!" << std::endl;
+  //std::cout << "Thanks for playing!" << std::endl;
   return 0;
 }
