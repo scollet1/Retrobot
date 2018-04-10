@@ -39,6 +39,12 @@ public:
 
     unsigned int getLives() const;
 
+	// Setters
+
+	void setLives(unsigned int value) {
+		this->_lives = value;
+	}
+
     // Methods
 
     void         updateObject(int y, int x);

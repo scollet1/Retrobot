@@ -24,7 +24,9 @@ SRC = 		Bullet \
 			Player \
 			GameEntity \
 			main \
-			Game 
+			Game \
+#			Reader \
+#			Writer 
 
 HDR =		Bullet \
 			Character \

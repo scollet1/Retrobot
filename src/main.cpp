@@ -50,100 +50,106 @@ void play(Game *game)
 	float inputs[4];
 	char pause[] = " GAME PAUSED ";
 
-  Enemy** _en = new Enemy*[MAX_ENEMIES];
-  for (int i = 0; i < MAX_ENEMIES; i++)
-    _en[i] = NULL;
+	Enemy** _en = new Enemy*[MAX_ENEMIES];
+	for (int i = 0; i < MAX_ENEMIES; i++)
+		_en[i] = NULL;
 
 	uIn = getch();
-  while (game->getPlayer().getLives())
-  {
-    usleep(30000);
-    timeout(0); // don't block for user
-    //uIn = getch();
+	int loop = 1;  
 
-    /*
-      NOTE : CAPTURE BOT INPUT AND ROUTE COMMANDS
-    */
+	erase();
+	int uInExamine;
+	while (true) {
+	//while (game->getPlayer().getLives()) { // NOTE : UNCOMMENT AFTER READ/RWITE IS IMPLEMENTED
+	//	if (loop == 1) {
+	//		loop = 0;
+	//		continue;
+	//	}
+		usleep(30000);
+		timeout(0);
+		uIn = getch();
+		/*
+		NOTE : CAPTURE BOT INPUT AND ROUTE COMMANDS
+		*/
+
 
 	//std::cout << "pre-forward" << std::endl;
+		inputs[0] = (float)game->getPlayer().getPosY();
+		inputs[1] = (float)game->getPlayer().getPosX();
+		inputs[2] = (float)game->getNearestEnemy((int)inputs[1], (int)inputs[0]);
+		inputs[3] = (float)(game->getPlayer().getBullet(0)->getAliveStatus() == true)?1:0;
+		uInExamine = game->getNN()->forwardPropogate(inputs, gameTime);
+		uIn = uInExamine;
+	//std::cout << "post-forward" << std::endl;
+	//std::cout << "uIn = " << uIn << std::endl;
 
-	inputs[0] = (float)game->getPlayer().getPosY();
-	inputs[1] = (float)game->getPlayer().getPosX();
-	inputs[2] = (float)game->getNearestEnemy((int)inputs[1], (int)inputs[0]);
-	inputs[3] = (float)(game->getPlayer().getBullet(0)->getAliveStatus() == true)?1:0;
-	uIn = (int)game->getNN()->forwardPropogate(inputs, gameTime);
+		switch (uIn) {
+			case 8:
+				if (game->getPlayer().getPosY() - 2 > PLAYER_BORDER) {
+					game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), ' ');
+					game->getPlayer().updateObject(-2, 0);
+				}
+				break;
+			case 5:
+				if (game->getPlayer().getPosY() + 2 < game->getMaxY() - PLAYER_BORDER) {
+					game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), ' ');
+					game->getPlayer().updateObject(2, 0);
+				}
+				break;
+			case 4:
+				if (game->getPlayer().getPosX() - 1 > PLAYER_BORDER) {
+						game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), ' ');
+					game->getPlayer().updateObject(0, -1);
+        			}
+        			break;
+	      		case 6:
+				if (game->getPlayer().getPosX() + 1 < game->getMaxX() - PLAYER_BORDER) {
+					game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), ' ');
+					game->getPlayer().updateObject(0, 1);
+				}
+				break;
+			case 3: // CHANGE TO 0 WHEN NETWORK IS READY ????
+				game->getPlayer().shootBullet();
+				break;
+      		
+			case 1:
+//				attron(COLOR_PAIR(5) | A_BOLD);
+//				mvprintw(game->getMaxY() / 2, (game->getMaxX() - sizeof(pause)) / 2, "%s", pause);
+//				attroff(COLOR_PAIR(5) | A_BOLD);
+//				do {
+//					uIn = (int)game->getNN()->forwardPropogate(inputs, gameTime);
+//				} while(uIn != 1);
+				break;
+			case 2:
+//				game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), '*');
+//				game->getPlayer().triggerDeath();
+				break;
+      		default:
+        		break;
+    	}
 
-//	std::cout << "uIn = " << uIn << std::endl;
+    
+	/*
+	**
+	BIG NOTE ::: WIPE MAP
+	**
+	*/
 
-    switch (uIn)
-    {
-      case 8:
-        if (game->getPlayer().getPosY() - 2 > PLAYER_BORDER)
-        {
-          game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), ' ');
-          game->getPlayer().updateObject(-2, 0);
-        }
-        break;
-      case 5:
-        if (game->getPlayer().getPosY() + 2 < game->getMaxY() - PLAYER_BORDER)
-        {
-          game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), ' ');
-          game->getPlayer().updateObject(2, 0);
-        }
-        break;
-      case 4:
-        if (game->getPlayer().getPosX() - 1 > PLAYER_BORDER)
-        {
-          game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), ' ');
-          game->getPlayer().updateObject(0, -1);
-        }
-        break;
-      case 6:
-        if (game->getPlayer().getPosX() + 1 < game->getMaxX() - PLAYER_BORDER)
-        {
-          game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), ' ');
-          game->getPlayer().updateObject(0, 1);
-        }
-        break;
-      case 0:
-        game->getPlayer().shootBullet();
-        break;
-      /*case 'p':
-    	  attron(COLOR_PAIR(5) | A_BOLD);
-    	  mvprintw(game->getMaxY() / 2, (game->getMaxX() - sizeof(pause)) / 2, "%s", pause);
-    	  attroff(COLOR_PAIR(5) | A_BOLD);
-        do {
-          uIn = getch();
-        } while(uIn != 'p');
-        break;*/
-      case KEY_END:
-        game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), '*');
-        game->getPlayer().triggerDeath();
-        break;
-      default:
-        break;
-    }
+	//Wipe map, set stars
+	for (int col = 0; col < game->getMaxY(); col++)
+		for (int row = 0; row < game->getMaxX(); row++) {
+			if (std::rand() % (5 * game->getMaxX()) <= 1) {
+				game->setMap(col, row, '`');
+			} else {
+				game->setMap(col, row, ' ');
+			}
+		}
 
-    /*
-    **
-      BIG NOTE ::: WIPE MAP
-    **
-    */
-
-      //Wipe map, set stars
-    for (int col = 0; col < game->getMaxY(); col++)
-      for (int row = 0; row < game->getMaxX(); row++) {
-        if (std::rand() % (5 * game->getMaxX()) <= 1) 
-          game->setMap(col, row, '`');
-        else          
-          game->setMap(col, row, ' ');
-      }
-
-    /*
-    **
-      BIG NOTE ::: CYCLE THROUGH ALL ENEMIES
-    **
-    */
+	/*
+	**
+	BIG NOTE ::: CYCLE THROUGH ALL ENEMIES
+	**
+	*/
 
     // For Every Enemy we have
     for (int w = 0; w < MAX_ENEMIES; w++) {
@@ -312,103 +318,120 @@ void play(Game *game)
 	int i;
 	int j;
 
-	if (!game->getPlayer().getAliveStatus()) {
-		for (i = game->getMaxY() - 1; i >= 0; --i)
-			for (j = game->getMaxX() - 1; j >= 0; --j) {
+	//std::cout << "segf" << std::endl;
+
+	if (game->getPlayer().getAliveStatus() == false) {
+		for (i = game->getMaxY() - 1; i >= 0; i--)
+			for (j = game->getMaxX() - 1; j >= 0; j--) {
 				game->getEnemy(i, j).setAliveStatus(false);
 			}
-	for (i = game->getNN()->getMemories(); i >= 0; i--) {
-		game->getNN()->backwardPropogate(
-		game->getNN()->getMemory(i));
-	} //game->getNN()->save();
-      move(0, 0);
-      char deadTextDisp[] = " YOU DIED ";
-      char deadTextInst[] = " PRESS R TO RESPAWN OR END TO QUIT ";
-      attron(COLOR_PAIR(7) | A_BOLD);
-      mvprintw(game->getMaxY() / 2,
-      (game->getMaxX() - sizeof(deadTextDisp)) / 2, "%s", deadTextDisp);
-      mvprintw((game->getMaxY() / 2) + 4,
-      (game->getMaxX() - sizeof(deadTextInst)) / 2, "%s", deadTextInst);
-      attroff(COLOR_PAIR(7) | A_BOLD);
-      curs_set(0);
-      do {
-        uIn = getch();
-      } while (uIn != 'r' && uIn != KEY_END);
-      game->getPlayer().setAliveStatus(true);
-    }
+		if (game->getNN()->getMemoryIndex()) {
+			for (i = 0; i < game->getNN()->getMemoryIndex(); i++) {
+				game->getNN()->backwardPropagate(
+				game->getNN()->getMemory(i),
+				game->getPlayer().getHP(),
+				game->getPlayer().getLives(),
+				game->getPlayer().getAtkDmg());
+			} //game->getNN()->save();
+		}
+      		move(0, 0);
+//      		char deadTextDisp[] = " YOU DIED ";
+//      		char deadTextInst[] = " PRESS R TO RESPAWN OR END TO QUIT ";
+//      		attron(COLOR_PAIR(7) | A_BOLD);
+//      		mvprintw(game->getMaxY() / 2,
+//      		(game->getMaxX() - sizeof(deadTextDisp)) / 2, "%s", deadTextDisp);
+//      		mvprintw((game->getMaxY() / 2) + 4,
+//      		(game->getMaxX() - sizeof(deadTextInst)) / 2, "%s", deadTextInst);
+//      		attroff(COLOR_PAIR(7) | A_BOLD);
+//      		curs_set(0);
+//      		do {
+ //       		uIn = getch();
+  //    		} while (uIn != 'r' && uIn != KEY_END);
+      		game->getPlayer().setAliveStatus(true);
+		game->getPlayer().setLives(3);
+    	}
+	
+	//std::cout << "ault" << std::endl;
 
 
-		move(0, 0);
-    /*
-      NOTE : BUFFER OUTPUT FOR PRINTING
-    */
+	move(0, 0);
+    
+	/*
+		NOTE : BUFFER OUTPUT FOR PRINTING
+	*/
 
-		for (int a = 0; a < game->getMaxY(); a++)
-			for (int b = 0; b < game->getMaxX(); b++)
-			{
-        if (game->getMap(a, b) == 'W')
-          attron(COLOR_PAIR(2) | A_BOLD);
-        else if (game->getMap(a, b) == 'V')
-          attron(COLOR_PAIR(2) | A_BOLD);
-        else if (game->getMap(a, b) == 'X')
-          attron(COLOR_PAIR(2) | A_BOLD);
-        else if (game->getMap(a, b) == 'A')
-          attron(COLOR_PAIR(9) | A_BOLD);
-        else if (game->getMap(a, b) == '|')
-          attron(COLOR_PAIR(3) | A_BOLD);
-        else if (game->getMap(a, b) == '\\' || game->getMap(a, b) == '/')
-          attron(COLOR_PAIR(1) | A_BOLD);
-        else if (game->getMap(a, b) == ' ')
-          attron(COLOR_PAIR(4) | A_BOLD);
-        else if (game->getMap(a, b) == '`')
-          attron(COLOR_PAIR(4) | A_BOLD);
-        else if (game->getMap(a, b) == '!')
-          attron(COLOR_PAIR(8) | A_BOLD);
-        else if (game->getMap(a, b) == '<')
-          attron(COLOR_PAIR(6) | A_BOLD);
-        else if (game->getMap(a, b) == '>')
-          attron(COLOR_PAIR(6) | A_BOLD);
-        else if (game->getMap(a, b) == '$')
-          attron(COLOR_PAIR(6) | A_BOLD);
-        else if (game->getMap(a, b) == '#')
-          attron(COLOR_PAIR(1) | A_BOLD);
-        else if (game->getMap(a, b) == '*') {
-          attron(COLOR_PAIR(7) | A_BOLD);
-        }
-        addch(game->getMap(a, b));
-			}
+	for (int a = 0; a < game->getMaxY(); a++)
+		for (int b = 0; b < game->getMaxX(); b++) {
+        		if (game->getMap(a, b) == 'W')
+				attron(COLOR_PAIR(2) | A_BOLD);
+        		else if (game->getMap(a, b) == 'V')
+				attron(COLOR_PAIR(2) | A_BOLD);
+        		else if (game->getMap(a, b) == 'X')
+				attron(COLOR_PAIR(2) | A_BOLD);
+        		else if (game->getMap(a, b) == 'A')
+				attron(COLOR_PAIR(9) | A_BOLD);
+			else if (game->getMap(a, b) == '|')
+				attron(COLOR_PAIR(3) | A_BOLD);
+			else if (game->getMap(a, b) == '\\' || game->getMap(a, b) == '/')
+				attron(COLOR_PAIR(1) | A_BOLD);
+			else if (game->getMap(a, b) == ' ')
+				attron(COLOR_PAIR(4) | A_BOLD);
+			else if (game->getMap(a, b) == '`')
+				attron(COLOR_PAIR(4) | A_BOLD);
+			else if (game->getMap(a, b) == '!')
+				attron(COLOR_PAIR(8) | A_BOLD);
+			else if (game->getMap(a, b) == '<')
+				attron(COLOR_PAIR(6) | A_BOLD);
+			else if (game->getMap(a, b) == '>')
+				attron(COLOR_PAIR(6) | A_BOLD);
+			else if (game->getMap(a, b) == '$')
+				attron(COLOR_PAIR(6) | A_BOLD);
+			else if (game->getMap(a, b) == '#')
+				attron(COLOR_PAIR(1) | A_BOLD);
+			else if (game->getMap(a, b) == '*')
+				attron(COLOR_PAIR(7) | A_BOLD);
+/*			attroff(COLOR_PAIR(1) | A_BOLD);
+			attroff(COLOR_PAIR(2) | A_BOLD);
+			attroff(COLOR_PAIR(3) | A_BOLD);
+			attroff(COLOR_PAIR(4) | A_BOLD);
+			attroff(COLOR_PAIR(7) | A_BOLD);
+			attroff(COLOR_PAIR(9) | A_BOLD);*/
+			addch(game->getMap(a, b));
+		}
 		attron(COLOR_PAIR(6) | A_BOLD);
-    mvprintw(game->getMaxY() - 4, 2, "/|========================================================================|\\");
+		mvprintw(game->getMaxY() - 4, 2, "/|========================================================================|\\");
 		mvprintw(game->getMaxY() - 3, 2, "|| Score : %d ", eKilled);
-    mvprintw(game->getMaxY() - 3, 20, "|=====| Lives : %d  ", game->getPlayer().getLives());
-    mvprintw(game->getMaxY() - 3, 40, "|=====| HP : %2d  ", game->getPlayer().getHP());
-    mvprintw(game->getMaxY() - 3, 58, "|=====| Dmg : %2d  ||", game->getPlayer().getAtkDmg());
-    mvprintw(game->getMaxY() - 2, 2, "\\|========================================================================|/");
+		mvprintw(game->getMaxY() - 3, 20, "|=====| Lives : %d  ", game->getPlayer().getLives());
+		mvprintw(game->getMaxY() - 3, 40, "|=====| HP : %2d  ", game->getPlayer().getHP());
+		mvprintw(game->getMaxY() - 3, 58, "|=====| Dmg : %2d  ||", game->getPlayer().getAtkDmg());
+		mvprintw(game->getMaxY() - 3, 62, "|=====| uIn : %2f  ||", game->getNN()->getLR());
+		mvprintw(game->getMaxY() - 2, 2, "\\|========================================================================|/");
 		attroff(COLOR_PAIR(6) | A_BOLD);
-    if (uIn == KEY_END) break;
+//	if (uIn == 2) break;
 	gameTime++;
-  }
-  return ;
+	}
+	return ;
 }
 
 int main(void)
 {
-	int uIn;
+	int uIn; // user Input
 	std::srand(std::time(NULL));
 	initscr();
-  start_color();
+	start_color();
 	cbreak();
 	noecho();
 	keypad(stdscr, true);
-  init_pair(1, COLOR_BLUE, COLOR_BLACK); // PLAYER
+
+	init_pair(1, COLOR_BLUE, COLOR_BLACK); // PLAYER
 	init_pair(2, COLOR_RED, COLOR_BLACK); // ENEMY
 	init_pair(3, COLOR_YELLOW, COLOR_BLACK); // BULLET
 	init_pair(4, COLOR_WHITE, COLOR_BLACK); // BACKGROUND
 	init_pair(5, COLOR_BLUE, COLOR_BLACK); // MESSAGES
 	init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
-  init_pair(7, COLOR_RED, COLOR_BLACK); // MESSAGES
-  init_pair(8, COLOR_GREEN, COLOR_BLACK); // MESSAGES
-  init_pair(9, COLOR_CYAN, COLOR_BLACK); // MESSAGES
+	init_pair(7, COLOR_RED, COLOR_BLACK); // MESSAGES
+	init_pair(8, COLOR_GREEN, COLOR_BLACK); // MESSAGES
+	init_pair(9, COLOR_CYAN, COLOR_BLACK); // MESSAGES
 
 	int maxX, maxY;
   getmaxyx(stdscr, maxY, maxX);
@@ -425,33 +448,28 @@ int main(void)
   const char endTextReset[] = " PRESS R TO PLAY AGAIN ";
   const char endTextInst[] = " PRESS END TO EXIT ";
 
-  while (true) {
-    Game *game = new Game(maxY, maxX);
-    game->buildMaps(maxY, maxX);
-
-
-    attron(COLOR_PAIR(5));
-    mvprintw((maxY / 2) - 2, (maxX - sizeof(menuTextName)) / 2, "%s", menuTextName);
-  	mvprintw(maxY / 2, (maxX - sizeof(menuTextAuth)) / 2, "%s", menuTextAuth);
-  	attroff(COLOR_PAIR(5));
-
-  	attron(A_BOLD);
-  	mvprintw((maxY / 2) + 4, (maxX - sizeof(menuTextInst)) / 2, "%s", menuTextInst);
-  	attroff(A_BOLD);
-  	curs_set(0);
-
-    for (int a = 0; a < maxY - 1; a++)
-      for (int b = 0; b < maxX - 1; b++)
-        game->setMap(a, b, ' ');
-
-    game->setMap(posY, posX, 'A');
-
-	play(game);
-
-  	attron(COLOR_PAIR(7) | A_BOLD);
-    mvprintw(maxY / 2, (maxX - sizeof(endTextDisp)) / 2, "%s", endTextDisp);
-    mvprintw((maxY / 2) + 2, (maxX - sizeof(endTextReset)) / 2, "%s", endTextReset);
-    mvprintw((maxY / 2) + 4, (maxX - sizeof(endTextInst)) / 2, "%s", endTextInst);
+  
+	while (true) {
+		Game *game = new Game(maxY, maxX);
+		
+		game->buildMaps(maxY, maxX);
+		
+		attron(COLOR_PAIR(5));
+		mvprintw((maxY / 2) - 2, (maxX - sizeof(menuTextName)) / 2, "%s", menuTextName);
+		mvprintw(maxY / 2, (maxX - sizeof(menuTextAuth)) / 2, "%s", menuTextAuth);
+		attroff(COLOR_PAIR(5));
+		attron(A_BOLD);
+		mvprintw((maxY / 2) + 4, (maxX - sizeof(menuTextInst)) / 2, "%s", menuTextInst);
+		attroff(A_BOLD);
+		curs_set(0);
+		
+		game->setMap(posY, posX, 'A');
+		play(game);
+  		
+		attron(COLOR_PAIR(7) | A_BOLD);
+		mvprintw(maxY / 2, (maxX - sizeof(endTextDisp)) / 2, "%s", endTextDisp);
+		mvprintw((maxY / 2) + 2, (maxX - sizeof(endTextReset)) / 2, "%s", endTextReset);
+		mvprintw((maxY / 2) + 4, (maxX - sizeof(endTextInst)) / 2, "%s", endTextInst);
   	attroff(COLOR_PAIR(7) | A_BOLD);
     curs_set(0);
 

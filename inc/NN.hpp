@@ -4,54 +4,86 @@
 # include "Header.hpp"
 # include "Layer.hpp"
 # include "Neuron.hpp"
+# include <math.h>
+# include <vector>
 
 # define MEMORY 256
 
+// NOTE : NEED TO KEEP TRACK OF SCORE
+
 class NN {
-private:
-	Layer * _layers;
-//	float * _errors;
+
+protected:
+	int * _map;
 	int _numLayers;
 	int _numInputs;
-	float **_memory;
+	Layer * _layers;
+	int _memoryIndex;
+	float _learningRate;
+	float *_memory[MEMORY];
 
 public:
 	NN(int numInputs, int numOutputs, int numLayers, int numNeurons) {
 		int i;
-//		////std::cout << "NN constructor called" << std::endl;
+		this->_memoryIndex = 0;
 		this->_layers = new Layer[numLayers];
 		this->_numLayers = numLayers;
 		this->_numInputs = numInputs;
+		this->_map = new int[numOutputs];
+		this->_learningRate = 0.99f;
+		/* harcoded mappings for intended outputs 
+		due to change */
+		this->_map[0]=1;
+		this->_map[1]=2;
+		this->_map[2]=3;
+		this->_map[3]=4;
+		this->_map[4]=5;
+		this->_map[5]=6;
+		this->_map[6]=8;
 		for (i = 0; i < numLayers; i++) {
-//			////std::cout << "segfault here" << std::endl;
-//			this->_layers[i] = NULL;
 			if (i == 0) {
-				this->_layers[i] = Layer(numInputs);
+				this->_layers[i] = *new Layer(numInputs, numNeurons);
 			} else if (i == numLayers - 1) {
-				this->_layers[i] = Layer(numOutputs);
+				this->_layers[i] = *new Layer(numOutputs, 0);
+			} else if (i == numLayers - 2) {
+				this->_layers[i] = *new Layer(numNeurons, numOutputs);
 			} else {
-				this->_layers[i] = Layer(numNeurons);
+				this->_layers[i] = *new Layer(numNeurons, numNeurons);
 			}
-//			////std::cout << "no segfault" << std::endl;
 		}
 		int io = numInputs + numOutputs;
-		this->_memory = new float*[MEMORY];
 		for (i = 0; i < MEMORY; i++) {
 			this->_memory[i] = new float[io];
 		}
-//		////std::cout << "NN constructor completed" << std::endl;
-//		this->_errors = Layer(numOutputs);
-	};~NN(){}
+	};~NN(){};NN(){};NN(NN const & r){*this=r;}
+
+	NN & operator=(NN const & r) {
+		this->_learningRate = r._learningRate;
+		this->_numLayers = r._numLayers;
+		this->_numInputs = r._numInputs;
+		for (int i = 0; i < this->_numLayers; i++) {
+			this->_layers[i] = r._layers[i];
+		}
+		for (int j = 0; j < MEMORY; j++) {
+			this->_memory[j] = new float[NUM_INPUTS + NUM_OUTPUTS];
+		}
+		return *this;
+	}
+
+	float getLR() {
+		return this->_learningRate;
+	}
 
 	void save() {
-
+		/* save trained weights */
 	}
 
 	void load() {
+		/* load trained weights */
 		float* loadedWeights;
 
 		for (int i = 0; i < this->_numLayers; i++) {
-			for (int j = 0; j < this->_layers->get("NEURONS"); j++) {
+			for (int j = 0; j < this->_layers->getNeurons(); j++) {
 				this->_layers->
 					getNeuron(j).
 					setWeight(j, loadedWeights[i + j]);
@@ -59,161 +91,323 @@ public:
 		}
 	}
 
-	float* getMemory(int snapshot) {
-		//std::cout << "seg3" << std::endl;
-		float* ret = this->_memory[snapshot];
-		//std::cout << "fault3" << std::endl;
-		return ret;
+	Layer & getLayer(int i) {
+		return this->_layers[i];
+	}
+
+	int getLayers() {
+		return this->_numLayers;
 	}
 
 	int getMemories() {
 		return MEMORY;
 	}
 
+	int getMemoryIndex() {
+		return this->_memoryIndex;
+	}
+
+	float * getMemory(int snapshot) {
+		////std::cout << "RETURNING MEMORY SNAPSHOT == " << snapshot << std::endl;
+
+//		for (int i = 0; i < NUM_INPUTS + NUM_OUTPUTS; i++) {
+//			////std::cout << this->_memory[snapshot][i] << std::endl;
+//		}
+
+		if (snapshot <= this->_memoryIndex && snapshot < MEMORY) {
+			//std::cout << "snapshot === " << snapshot << std::endl;
+			return this->_memory[snapshot];
+		} else {
+			//std::cout << "snapshot % MEMORY === " << snapshot % MEMORY  << std::endl;
+			return this->_memory[snapshot % MEMORY];
+		}
+	}
+
 	void remember(float * data, int snapshot) {
-		if (snapshot < MEMORY) {
-			for (int i = 0; i < NUM_INPUTS + NUM_OUTPUTS; i++) {
-				this->_memory[snapshot][i] = data[i];
-			}
-		} return;
-	}
-
-
-	float forwardPropogate(float *data, int snapshot) {
-		////std::cout << "recording snapshot" << std::endl;
-		for (int h = 0; h < this->_layers[0].get("NEURONS"); h++) {
-			//std::cout << "seg1" << std::endl;
-			this->_memory[snapshot][h] = data[h];
-			//std::cout << "fault1" << std::endl;
-			this->_layers[0].getNeuron(h).set("INPUT", data[h]);
-		}
-		////std::cout << "forward prop" << std::endl;
-		for (int i = 0; i < this->_numLayers - 1; i++) {
-			////std::cout << "outside loop" << std::endl;
-			for (int j = 0; j < this->_layers[i + 1].get("NEURONS"); j++) {
-				////std::cout << "inside loop" << std::endl;
-				this->_layers[i + 1].
-				getNeuron(j).
-				set("INPUT", this->_layers[i].
-				sumAllOut(j));
-			}
-		}
-		////std::cout << "collecting highest out" << std::endl;
-		float highest = 0;
-		for (int o = 0;
-			o < this->_layers[this->_numLayers - 1].get("NEURONS"); 
-			o++)  {
-			if (this->_layers[this->_numLayers - 1].
-			getNeuron(o).get("OUTPUT") > highest) {
-				this->_memory[snapshot][o + this->_numInputs] =
-				this->_layers[this->_numLayers - 1].getNeuron(o).get("OUTPUT");
-				highest = this->_layers[this->_numLayers - 1].
-				getNeuron(o).get("OUTPUT");
-			}
-		}
-		////std::cout << "returning output" << std::endl;
-		remember(data, snapshot);
-		return highest;
-	}
-	
-	float calculateReward(float health, float lives, float attackDamage) {
-		float result = ((health * 10.0)
-			+ (lives * 5.0)
-			+ (attackDamage * 50.0))
-			/ MAX_REWARD;
-		return result > THRESHOLD ? 1.0 : result;
-	}
-
-	void backwardPropogate(float* memory) {
-		/* calculate EXPECTED OUTPUTS from REWARD */
-
+		//std::cout << "MEMBERING" << std::endl;
 		int i;
-		
-		//std::cout << "seg2" << std::endl;
+		/* remember function takes a float array of data to be
+		indexed and stored by snapshot number,
+		this keeps the data sequential for use later by the
+		backpropagation algorithm */
 
-		float reward = calculateReward(
-				memory[0],
-				memory[1],
-				memory[2]
-		);
-		//std::cout << "REWARD = " << reward << std::endl;
-		//std::cout << "fault2" << std::endl;
-		//std::cout << "NUM OUT = " << NUM_OUTPUTS << std::endl;
-		float errors[NUM_OUTPUTS];
-		//std::cout << "seg4" << std::endl;
-		/* calculate
-		OUTPUT ERRORS */
-
-		for (i = NUM_INPUTS; i < NUM_OUTPUTS; i++) {
-			//std::cout << "fault4" << std::endl;
-			errors[i - NUM_INPUTS] = (memory[i] * reward) - memory[i];	
-			//std::cout << "seg5" << std::endl;
+		if (snapshot >= MEMORY) {
+			//std::cout << "snap > MEMORY == " << snapshot % MEMORY << std::endl;
+			this->_memoryIndex = snapshot % MEMORY;
+		} else if (snapshot > this->_memoryIndex) {
+			//std::cout << "snap > MEMINDEX == " << snapshot << std::endl;
+			this->_memoryIndex = snapshot;
 		}
-		float hiddenErrors[NEURONS_PER_LAYER];
-		//std::cout << "fault5" << std::endl;
-		/* start with the FIRST HIDDEN LAYER and OUTPUT LAYER ERRORS */ 
-		for (i = this->_numLayers - 2; i >= 0; i--) {
 
-			//std::cout << "seg6" << std::endl;
-			adjustErrors(this->_layers[i], errors, i);
-
-			//std::cout << "fault4" << std::endl;
-			/*if (i == this->_numLayers - 2) {*/
-				/* resize ERROR VECTOR to fit HIDDEN NEURON ERRORS */
-/*				delete errors;
-				errors = new float[NUM_NEURONS];
-			}
-			for (i = 0; i < NUM_NEURONS; i++) {
-				errors[i] = hiddenErrors[i];
-			}*/			
+		for (i = 0; i < NUM_INPUTS + NUM_OUTPUTS; i++) {
+			this->_memory[this->_memoryIndex][i] = data[i];
 		}
-		return;
+		//std::cout << "I MEMBER" << std::endl;
 	}
 
-	float deriv(float in) {
-		return in + (1 - in);
+	float * squash(float * array, int len) {
+		/* Squashes an array to 1-hot vector */
+		int i;
+		float sum = 0.0f;
+
+		for (i = 0; i < len; i++) {sum+=array[i];} // loooool
+		for (i = 0; i < len; i++) {array[i]/=sum;} // k
+		return array;
 	}
 
-	void adjustErrors(Layer layer, float* errors, int index) {
-		int numNeurons = layer.get("NEURONS"); // NUMBER OF NEURONS
-		float hiddenErrors[numNeurons]; // 
-		float expected[numNeurons];
+	int & forwardPropogate(float * data, int snapshot) {
+		//std::cout << "FORWARD PROPPIN IT UP" << std::endl;
+		int o; // o, hi
+		int h;
 		int i;
 		int j;
-		float reward = 0.0;
+		int index;
+		float out;
+		float highest = 0.0f;
+		float array[NUM_INPUTS + NUM_OUTPUTS];
+//		////std::cout << "REMEMBERING SNAPSHOT == " << snapshot << std::endl;
+//		remember(data, snapshot);
+		/* loop through the first layer and set the inputs equal to
+		relevant observations of the game state */
+		for (h = 0; h < this->_layers[0].getNeurons(); h++) {
+			array[h] = data[h];
+			this->_layers[0].getNeuron(h).setInput(data[h]);
+		}
 
-/*		hiddenErrors[i] = errors[i]
-				* (layer.getNeuron(j).getWeight(k)
-				/ layer.getNeuron(j).sumAllWeight());*/
+		/* loop through every other layer after the first,
+		looking at the next layer,
+		forward propagating the signals through activations */
+		for (i = 0; i < this->_numLayers - 1; i++) {
+			for (j = 0; j < this->_layers[i + 1].getNeurons(); j++) {
+				out = this->_layers[i].sumAllOut(j);
+				this->_layers[i + 1].
+				getNeuron(j).
+				setInput(out);
+			}
+		}
+
+		/* loop through the neurons on the last layer
+		and look at the highest produced result at each index
+		if the result at index i is higher than the current highest result
+		then we set the highest equal to the result at index i
+		and save the index */
+		for (o = 0; o < this->_layers[this->_numLayers - 1].getNeurons(); o++)  {
+			array[o + NUM_INPUTS] =
+			this->_layers[this->_numLayers - 1].getNeuron(o).activate();
+
+			if (this->_layers[this->_numLayers - 1].getNeuron(o).activate() > highest) {
+				highest = this->_layers[this->_numLayers - 1].
+				getNeuron(o).activate();
+				index = o;
+			}
+		}
+		/* remember the snapshot for later use in training */
+		remember(data, snapshot);
+		////std::cout << "LEAVING FORWARD PROP WITH SNAPSHOT == " << snapshot << std::endl;
+		////std::cout << "address of snapshot == " << getMemory(snapshot) << std::endl;
+		/* return the index mapped to an actual output */
+		//std::cout << "FORWARD PROP DONEZO" << std::endl;
+		if (RNGf(0.0f, 1.0f) > this->_learningRate) {
+			return this->_map[index];
+		} else {
+//			std::cout << RNG(0, 7) << std::endl;
+			return this->_map[(RNG(0, 7))];
+		}
+	}
+	
+	float RNGf(float min, float max) {
+		float random = static_cast <float> (rand() /
+				static_cast <float> (RAND_MAX *
+				((max - min) + min)));
+		return random;
+	}
+
+	int RNG(int min, int max) {
+		int random  = rand() % max + min;
+		return random;
+	}
+
+	float calculateReward(float health, float lives, float attackDamage) {
+		/* simply returns the current player state in comparison to
+		the maximum reward in order to evaluate performance */
+		/* BIG OL' NOTE :: MIGHT NEED ADJUSTMENT DEPENDING ON LEARNING RATE */
+		/*////std::cout << "PRINTING REWARD STATS" << std::endl;
+		////std::cout <<
+		health <<
+		std::endl <<
+		lives <<
+		std::endl <<
+		attackDamage <<
+		std::endl;*/
+		float result = ((health * 10.0)
+			+ (lives * 5.0)
+			+ (attackDamage * 50.0));
+		return result;
+	}
+
+	void backwardPropagate(float * memory, float health, float lives, float atkDmg) {
+		////std::cout << "BACK PROPPING IT UP" << std::endl;
+		/* for every layer in the network,
+		starting from the end and working to the front
+			errors[]
+			if not the last layer
+				for every neuron[i] in that layer
+					error = 0.0
+					for every neuron[j] in the layer after current layer
+						error += neuron.getWeight(j) * delta;
+					errors[i] = error;
+			else
+				for every neuron[j] in the last layer
+					errors[j] = expected[j] - neuron.getOutput();
+			for every neuron[i] in layer
+				neuron.setDelta(errors[i] * neuron.transferDeriv(neuron.getOutput()));*/
+		int i;
+		int j;
+		int k;
+		/* calculate the reward from remembered player status */
+		float reward = calculateReward(
+			health, lives, atkDmg
+		);
+		float error;
+		float expected[NUM_OUTPUTS];
+		std::vector<float> errors(NUM_OUTPUTS);
+
+		/* calculate the expected output for the final output */
+//		////std::cout << "PRINTING EXPECTED VALUES" << std::endl;
+		////std::cout << "before getting expected" << std::endl;
+//		for (i = NUM_INPUTS; i < NUM_OUTPUTS; i++) { // cheeky math, looks bad man sorry future samurai
+//			expected[i - NUM_INPUTS] = memory[i] * MAX_REWARD; // update: cheeky math might be fucking me
+//			std::cout << expected[i] << std::endl;
+//		}
+//		exit(1);
+
+		/* loop through each layer before the last
+		and adjust weights dependent on the errors
+		of the "previous" layer */
+		////std::cout << "before loopin" << std::endl;
+		for (i = this->_numLayers - 1; i >= 0; i--) {
+			errors.resize(this->_layers[i].getNeurons());
+			if (i != this->_numLayers - 1) { // not last layer
+				for (j = 0; j < this->_layers[i].getNeurons(); j++) {
+					error = 0.0f;
+					for (k = 0; k < this->_layers[i + 1].getNeurons(); k++) {
+						error += this->_layers[i].getNeuron(j).getWeight(k) *	// gotta
+							 this->_layers[i].getNeuron(k).getDelta();	// clean
+//						std::cout << "error == " <<  error << std::endl;
+						errors.push_back(error);
+					}
+				}
+			} else {
+//				std::cout << "let's start this shit" << std::endl;
+				for (j = 0; j < this->_layers[i].getNeurons(); j++) {
+					/*////std::cout <<
+					"reward == " <<
+					reward <<
+					std::endl <<
+					1 - (reward / MAX_REWARD) <<
+					std::endl;*/
+					errors.push_back(
+						(MAX_REWARD - reward) / MAX_REWARD
+						//(memory[i + NUM_INPUTS] * (1 - (reward / MAX_REWARD))) - memory[i + NUM_INPUTS]
+					);
+				}
+				for (std::vector<float>::const_iterator q = errors.begin(); q != errors.end(); q++) {
+//					std::cout << "output error " << (*q) << std::endl;
+				}
+//				exit(1);
+			}
+			j = 0;
+			for (std::vector<float>::const_iterator q = errors.begin(); q != errors.end(); q++) {
+				this->_layers[i].getNeuron(j).setDelta(*q *				// this
+				this->_layers[i].getNeuron(j).transferDeriv(				// shit
+				this->_layers[i].getNeuron(j).activate()));				// ip
+//				std::cout << "delta == " << this->_layers[i].getNeuron(j).getDelta() << std::endl;
+				j++;
+			}
+		}
+		if (RNGf(0.0f, 1.0f) >= this->_learningRate) {
+			this->_learningRate *= 0.99f;
+		}
+		updateWeights(expected, memory);
+//		////std::cout << "crisis averted" << std::endl;
+	}
+
+	void updateWeights(float * expected, float * memory) {
+		std::vector<float> inputs;
+		int i;
+		int j;
+		int k;
+
+		inputs.resize(NUM_INPUTS);
+		for (i = 0; i < NUM_INPUTS; i++) {
+//			std::cout << memory[i] << std::endl;
+			inputs[i] = memory[i];
+//			std::cout << inputs[i] << std::endl;
+		}
+//		exit(1);
+		for (i = 0; i < this->_numLayers; i++) {
+			inputs.resize(this->_layers[i].getNeurons());
+			if (i != 0) {
+				for (j = 0; j < this->_layers[i].getNeurons(); j++) {
+					inputs[j] = this->_layers[i].getNeuron(j).getInput();
+				}
+				for (j = 0; j < this->_layers[i].getNeurons(); j++) {
+					for (k = 0; k < this->_layers[i].getNeuron(j).getWeights(); k++) {
+//						std::cout << "printing wait == " << this->_layers[i].getNeuron(j).getWeight(k) << std::endl;
+//						std::cout << "learning rate == " << 0.87 << std::endl;
+//						std::cout << "this input == " << inputs[j] << std::endl;
+//						std::cout << "should be == " << this->_layers[i].getNeuron(j).getWeight(k) + 0.87 * this->_layers[i].getNeuron(j).getDelta() * inputs[j] << std::endl;
+						this->_layers[i].getNeuron(j).setWeight(k
+						, this->_layers[i].getNeuron(j).getWeight(k)
+						+ this->_learningRate
+						* this->_layers[i].getNeuron(j).getDelta()
+						* inputs[j]);
+//						std::cout << "printing wait == " << this->_layers[i].getNeuron(j).getWeight(k) << std::endl;
+					}
+				}
+			}
+		}
+	}
 		
 
-		//std::cout << "segadjusterrors1" << std::endl;
-		/* ITERATE through each NEURON on LAYER
-		** get number of WEIGHTS connected to each NEURON
-		** 
-		*/ 
+	/*float * adjustErrors(Layer & layer, float * errors, int index) {
+		int h;
+		int i;
+		int j;
+		int weights;
+		float reward = 0.0;
+		int numNeurons = layer.getNeurons(); // NUMBER OF NEURONS
+		float expected[numNeurons];
+		float hiddenErrors[numNeurons]; //
+		float denom = layer.sumAllWeight();
+
+		 ITERATE through each NEURON on LAYER
+		get number of WEIGHTS connected to each NEURON 
 		for (i = 0; i < numNeurons; i++) {
-
-			//std::cout << "segadjusterrors2" << std::endl;
-			int weights = layer.getNeuron(i).get("WEIGHTS");
+			weights = layer.getNeuron(i).getWeights();
 			float hiddenErrors[weights];
-			float denom = layer.sumAllWeight();
-			for (j = 0; j < weights; j++) {
-				//std::cout << "segadjusterrors3" << std::endl;
-				hiddenErrors[j] =  (layer.getNeuron(i).getWeight(j) / denom) * errors[j];
-				//std::cout << "segadjusterrors4" << std::endl;
-			}
-		}
-
-
-		if (index == NUM_LAYERS - 1) {
-			for (int h = 0; h < NUM_OUTPUTS; h++) {
-				expected[h] = reward *
+			 if we're on the last layer
+			loop through the outputs and find the expected value 
+			if (index != NUM_LAYERS - 1) {
+				for (j = 0; j < weights; j++) {
+					hiddenErrors[j] = (layer.getNeuron(i).getWeight(j) / denom) * errors[j];
+				}
+			} else {
+				for (h = 0; h < NUM_OUTPUTS; h++) {
+					expected[h] = MAX_REWARD *
 						layer.
 						getNeuron(h).
-						get("OUTPUT");
+						getOutput();
+				}
+		
+				for (h = 0; h < NUM_OUTPUTS; h++) {
+					weights = expected[h] - 
+						(reward * layer.
+						getNeuron(h).
+						getOutput());
+				}
 			}
-		}
+		} return hiddenErrors;*/
 
 // NO ### !!!
 /*		for (int i = 0; i < ns; i++) {
@@ -228,7 +422,7 @@ public:
 */
 // BAD ### !!!
 	
-	}
+	//}
 };
 
 #endif

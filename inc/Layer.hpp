@@ -10,54 +10,60 @@ class Layer {
 private:
 	Neuron * _neurons;
 	int _numNeurons;
+	int _connections;
 
 public:
-	Layer(int numNeurons) {
-		//std::cout << "layer constructor called" << std::endl;
+	Layer(int numNeurons, int connections) {
+		this->_connections = connections; // connections per neuron to next layer
 		this->_numNeurons = numNeurons;
 		this->_neurons = new Neuron[numNeurons];
-/*		for (int i = 0; i < numNeurons; i++) {
-			this->_neurons[i] = Neuron(numNeurons);
-		}*/
-		//std::cout << "layer constructor completed" << std::endl;
-	};~Layer(){};Layer(){};
-
-	Layer & operator=(const Layer & r) {
-		this->_numNeurons = r._numNeurons;
-		this->_neurons = new Neuron[this->_numNeurons];
-		for (int i = 0; i < r._numNeurons; i++) {
-			//std::cout << "seg" << std::endl;
-			this->_neurons[i] = r._neurons[i];
-			//std::cout << "end" << std::endl;
+		for (int i = numNeurons - 1; i >= 0; i--) {
+			this->_neurons[i] = (*new Neuron(connections));
+		
 		}
+	};~Layer(){};Layer(){};Layer(Layer const & r){*this = r;}
+
+	Layer & operator=(Layer const & r) {
+		this->_numNeurons = r._numNeurons;
+		this->_neurons = new Neuron[r._numNeurons];
+		for (int i = 0; i < r._numNeurons; i++) {
+			this->_neurons[i] = Neuron(r._connections);
+		} return *this;
 	}
 
 	float sumAllOut(int index) {
+		int i;
 		float result = 0.0;
-		//std::cout << "summing output for neuron" << std::endl;
-		for (int i = 0; i < this->_numNeurons; i++) {
-			result += this->_neurons[i].get("OUTPUT") *
+		/* loop through each neuron
+		and sum the result of the neurons' activation
+		multiplied by the weight connected to a specific neuron
+		in the next layer */
+		for (i = 0; i < this->_numNeurons; i++) {
+			result += this->_neurons[i].activate() *
 			this->_neurons[i].getWeight(index);
 		}
-		//std::cout << "output returned" << std::endl;
+//		std::cout << "PRINTING SUMALLOUT RESULT" << std::endl;
+//		std::cout << result << std::endl;
 		return result;
 	}
 
 	float sumAllWeight() {
 		float result = 0;
 		for (int i = 0; i < this->_numNeurons; i++) {
-			result += this->_neurons[i].get("WEIGHT");
+			result += this->_neurons[i].sumAllWeight();
 		} return result;
 	}
 
-	Neuron getNeuron(int index) {
+	Neuron &/* Who would win???
+		A terrible programmer with a year of experience
+		-----------------------------------------------
+		or one little andy boi??? */
+		getNeuron(int index) { // fucking got it lol
 		return this->_neurons[index];
 	}
 
-	int get(std::string opt) {
-		if (opt == "NEURONS") {
-			return this->_numNeurons;
-		}
+	int & getNeurons() {
+		return this->_numNeurons;
 	}
 };
 
