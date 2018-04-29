@@ -46,10 +46,37 @@ public:
 
 	NN *getNN() {return this->_nn;}
 
-	int getNearestEnemy(int x, int y) {
-		for (int i = y - 1; i >= 0; i--) {
-			if (getMap(i, x) != ' ' || getMap(i, x) != '|')
-				return (i);
+	int getNearestEnemy(int x, int y, int axis, int dir) {
+		int i;
+		int end;
+
+		if (dir < 0) {
+			end = 5;
+		} else if (dir > 0) {
+			if (axis == 'y') {
+				end = getMaxY() - 5;
+			} else if (axis == 'x') {
+				end = getMaxX() - 5;
+			}
+		}
+
+//		std::cout << "borken" << std::endl;
+		if (axis == 'y') {
+			for (i = y; i != end; i += dir) {
+//				std::cout << y << " " << i << " " << end << std::endl;
+				if (getMap(i, x) != ' ' || getMap(i, x) != '!' || getMap(i, x) != 'A' || getMap(i, x) != '\\' || getMap(i, x) != '/') {
+//					std::cout << "not borken" << std::endl;
+					return (i);
+				}
+			}
+		} else if (axis == 'x') {
+			for (i = x; i != end; i += dir) {
+//				std::cout << x << " " << i << " " << end << std::endl;
+				if (getMap(y, i) != ' ' || getMap(y, i) != '!' || getMap(y, i) != 'A' || getMap(y, i) != '\\' || getMap(y, i) != '/') {
+//					std::cout << "not borken" << std::endl;
+					return (i);
+				}
+			}
 		}
 	}
 

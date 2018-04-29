@@ -47,7 +47,7 @@ void play(Game *game)
 	int uIn;
 	int eKilled = 0;
 	int gameTime = 0;
-	float inputs[4];
+	float inputs[7];
 	char pause[] = " GAME PAUSED ";
 
 	Enemy** _en = new Enemy*[MAX_ENEMIES];
@@ -74,10 +74,13 @@ void play(Game *game)
 
 
 	//std::cout << "pre-forward" << std::endl;
-		inputs[0] = (float)game->getPlayer().getPosY();
-		inputs[1] = (float)game->getPlayer().getPosX();
-		inputs[2] = (float)game->getNearestEnemy((int)inputs[1], (int)inputs[0]);
-		inputs[3] = (float)(game->getPlayer().getBullet(0)->getAliveStatus() == true)?1:0;
+		inputs[0] = (float)game->getPlayer().getPosX();
+		inputs[1] = (float)game->getPlayer().getPosY();
+		inputs[2] = (float)game->getNearestEnemy((int)inputs[0], (int)inputs[1], 'y', 1);
+		inputs[3] = (float)game->getNearestEnemy((int)inputs[0], (int)inputs[1], 'x', 1);
+		inputs[4] = (float)game->getNearestEnemy((int)inputs[0], (int)inputs[1], 'y', -1);
+		inputs[5] = (float)game->getNearestEnemy((int)inputs[0], (int)inputs[1], 'x', -1);
+		inputs[6] = (float)(game->getPlayer().getBullet(0)->getAliveStatus() == true)?1:0;
 		uInExamine = game->getNN()->forwardPropogate(inputs, gameTime);
 		uIn = uInExamine;
 	//std::cout << "post-forward" << std::endl;
@@ -331,7 +334,8 @@ void play(Game *game)
 				game->getNN()->getMemory(i),
 				game->getPlayer().getHP(),
 				game->getPlayer().getLives(),
-				game->getPlayer().getAtkDmg());
+				game->getPlayer().getAtkDmg(),
+				eKilled);
 			} //game->getNN()->save();
 		}
       		move(0, 0);

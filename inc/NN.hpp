@@ -15,6 +15,7 @@ class NN {
 
 protected:
 	int * _map;
+	int _maxScore;
 	int _numLayers;
 	int _numInputs;
 	Layer * _layers;
@@ -25,6 +26,7 @@ protected:
 public:
 	NN(int numInputs, int numOutputs, int numLayers, int numNeurons) {
 		int i;
+		this->_maxScore = 0;
 		this->_memoryIndex = 0;
 		this->_layers = new Layer[numLayers];
 		this->_numLayers = numLayers;
@@ -227,7 +229,7 @@ public:
 		return random;
 	}
 
-	float calculateReward(float health, float lives, float attackDamage) {
+	float calculateReward(float health, float lives, float attackDamage, int score) {
 		/* simply returns the current player state in comparison to
 		the maximum reward in order to evaluate performance */
 		/* BIG OL' NOTE :: MIGHT NEED ADJUSTMENT DEPENDING ON LEARNING RATE */
@@ -239,13 +241,14 @@ public:
 		std::endl <<
 		attackDamage <<
 		std::endl;*/
+		if (score > this->_maxScore) this->_maxScore = score;
 		float result = ((health * 10.0)
 			+ (lives * 5.0)
-			+ (attackDamage * 50.0));
+			+ (attackDamage * 50.0)) + score;
 		return result;
 	}
 
-	void backwardPropagate(float * memory, float health, float lives, float atkDmg) {
+	void backwardPropagate(float * memory, float health, float lives, float atkDmg, int score) {
 		////std::cout << "BACK PROPPING IT UP" << std::endl;
 		/* for every layer in the network,
 		starting from the end and working to the front
@@ -266,7 +269,7 @@ public:
 		int k;
 		/* calculate the reward from remembered player status */
 		float reward = calculateReward(
-			health, lives, atkDmg
+			health, lives, atkDmg, score
 		);
 		float error;
 		float expected[NUM_OUTPUTS];
@@ -307,7 +310,7 @@ public:
 					1 - (reward / MAX_REWARD) <<
 					std::endl;*/
 					errors.push_back(
-						(MAX_REWARD - reward) / MAX_REWARD
+						((MAX_REWARD + score) - reward) / (MAX_REWARD + score)
 						//(memory[i + NUM_INPUTS] * (1 - (reward / MAX_REWARD))) - memory[i + NUM_INPUTS]
 					);
 				}
