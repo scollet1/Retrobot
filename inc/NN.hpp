@@ -242,9 +242,9 @@ public:
 		attackDamage <<
 		std::endl;*/
 		if (score > this->_maxScore) this->_maxScore = score;
-		float result = ((health * 10.0)
-			+ (lives * 5.0)
-			+ (attackDamage * 50.0)) + score;
+		float result = ((health)
+			+ (lives)
+			+ (attackDamage)) + score;
 		return result;
 	}
 
@@ -310,27 +310,31 @@ public:
 					1 - (reward / MAX_REWARD) <<
 					std::endl;*/
 					errors.push_back(
-						((MAX_REWARD + score) - reward) / (MAX_REWARD + score)
+						(((MAX_REWARD + this->_maxScore) -
+						reward) /
+						(MAX_REWARD + this->_maxScore) *
+						(1 - (this->_layers[i].getNeuron(j).activate() / NUM_OUTPUTS)))
 						//(memory[i + NUM_INPUTS] * (1 - (reward / MAX_REWARD))) - memory[i + NUM_INPUTS]
 					);
 				}
-				for (std::vector<float>::const_iterator q = errors.begin(); q != errors.end(); q++) {
+//				for (std::vector<float>::const_iterator q = errors.begin(); q != errors.end(); q++) {
 //					std::cout << "output error " << (*q) << std::endl;
-				}
+//				}
 //				exit(1);
 			}
 			j = 0;
 			for (std::vector<float>::const_iterator q = errors.begin(); q != errors.end(); q++) {
 				this->_layers[i].getNeuron(j).setDelta(*q *				// this
 				this->_layers[i].getNeuron(j).transferDeriv(				// shit
-				this->_layers[i].getNeuron(j).activate()));				// ip
+				this->_layers[i].getNeuron(j).activate()));				// ip man kung fu ???
 //				std::cout << "delta == " << this->_layers[i].getNeuron(j).getDelta() << std::endl;
 				j++;
 			}
 		}
-		if (RNGf(0.0f, 1.0f) >= this->_learningRate) {
+
+		if (RNGf(0.0f, 1.0f) >= this->_learningRate)
+		if (RNGf(0.0f, 1.0f) >= this->_learningRate)
 			this->_learningRate *= 0.99f;
-		}
 		updateWeights(expected, memory);
 //		////std::cout << "crisis averted" << std::endl;
 	}

@@ -353,6 +353,7 @@ void play(Game *game)
   //    		} while (uIn != 'r' && uIn != KEY_END);
       		game->getPlayer().setAliveStatus(true);
 		game->getPlayer().setLives(3);
+		eKilled = 0;
     	}
 	
 	//std::cout << "ault" << std::endl;

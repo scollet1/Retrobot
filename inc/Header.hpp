@@ -32,9 +32,10 @@
 # define PLAYER_DAMAGE       1
 # define MAX_BULLETS         10
 # define MAX_ENEMIES         125
+# define MAX_ATK	     5
 
 // NN Constants
-# define MAX_REWARD		((PLAYER_LIVES * 10.0) + (PLAYER_MAX_HP * 5.0) + (5 * 50.0))
+# define MAX_REWARD		((PLAYER_LIVES) + (PLAYER_MAX_HP) + (MAX_ATK))
 # define NUM_INPUTS		7
 # define NUM_OUTPUTS		7
 # define NEURONS_PER_LAYER	32
