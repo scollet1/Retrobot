@@ -195,25 +195,25 @@ public:
 		and save the index */
 		for (o = 0; o < this->_layers[this->_numLayers - 1].getNeurons(); o++)  {
 			array[o + NUM_INPUTS] =
-			this->_layers[this->_numLayers - 1].getNeuron(o).activate();
+			this->_layers[this->_numLayers - 1].getNeuron(o).activate() / NUM_OUTPUTS;
 
-			if (this->_layers[this->_numLayers - 1].getNeuron(o).activate() > highest) {
+			if (this->_layers[this->_numLayers - 1].getNeuron(o).activate() / NUM_OUTPUTS > highest) {
 				highest = this->_layers[this->_numLayers - 1].
-				getNeuron(o).activate();
+				getNeuron(o).activate() / NUM_OUTPUTS;
 				index = o;
 			}
 		}
 		/* remember the snapshot for later use in training */
-		remember(data, snapshot);
+		remember(array, snapshot);
 		////std::cout << "LEAVING FORWARD PROP WITH SNAPSHOT == " << snapshot << std::endl;
 		////std::cout << "address of snapshot == " << getMemory(snapshot) << std::endl;
 		/* return the index mapped to an actual output */
 		//std::cout << "FORWARD PROP DONEZO" << std::endl;
-		if (RNGf(0.0f, 1.0f) > this->_learningRate) {
+		if (RNGf(0.0f, 1.0f) >= this->_learningRate) {
 			return this->_map[index];
 		} else {
 //			std::cout << RNG(0, 7) << std::endl;
-			return this->_map[(RNG(0, 7))];
+			return this->_map[(RNG(0, NUM_OUTPUTS))];
 		}
 	}
 	

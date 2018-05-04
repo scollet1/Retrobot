@@ -51,12 +51,12 @@ public:
 		int end;
 
 		if (dir < 0) {
-			end = 5;
+			end = 1;
 		} else if (dir > 0) {
 			if (axis == 'y') {
-				end = getMaxY() - 5;
+				end = getMaxY() - 1;
 			} else if (axis == 'x') {
-				end = getMaxX() - 5;
+				end = getMaxX() - 1;
 			}
 		}
 
