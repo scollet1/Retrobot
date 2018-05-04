@@ -35,13 +35,13 @@ public:
 		this->_learningRate = 0.99f;
 		/* harcoded mappings for intended outputs 
 		due to change */
-		this->_map[0]=1;
-		this->_map[1]=2;
+//		this->_map[0]=1;
+//		this->_map[1]=2;
 		this->_map[2]=3;
 		this->_map[3]=4;
 		this->_map[4]=5;
-		this->_map[5]=6;
-		this->_map[6]=8;
+		this->_map[1]=6;
+		this->_map[0]=8;
 		for (i = 0; i < numLayers; i++) {
 			if (i == 0) {
 				this->_layers[i] = *new Layer(numInputs, numNeurons);
@@ -302,6 +302,7 @@ public:
 				}
 			} else {
 //				std::cout << "let's start this shit" << std::endl;
+				float discount = 0.99;
 				for (j = 0; j < this->_layers[i].getNeurons(); j++) {
 					/*////std::cout <<
 					"reward == " <<
@@ -311,11 +312,12 @@ public:
 					std::endl;*/
 					errors.push_back(
 						(((MAX_REWARD + this->_maxScore) -
-						reward) /
-						(MAX_REWARD + this->_maxScore) *
-						(1 - (this->_layers[i].getNeuron(j).activate() / NUM_OUTPUTS)))
+						(reward * discount)) /
+						(MAX_REWARD + (this->_maxScore * discount)) *
+						(this->_layers[i].getNeuron(j).activate() / NUM_OUTPUTS))
 						//(memory[i + NUM_INPUTS] * (1 - (reward / MAX_REWARD))) - memory[i + NUM_INPUTS]
 					);
+					discount *= discount;
 				}
 //				for (std::vector<float>::const_iterator q = errors.begin(); q != errors.end(); q++) {
 //					std::cout << "output error " << (*q) << std::endl;

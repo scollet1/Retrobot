@@ -37,7 +37,7 @@
 // NN Constants
 # define MAX_REWARD		((PLAYER_LIVES) + (PLAYER_MAX_HP) + (MAX_ATK))
 # define NUM_INPUTS		7
-# define NUM_OUTPUTS		7
+# define NUM_OUTPUTS		5
 # define NEURONS_PER_LAYER	32
 # define NUM_LAYERS		5
 # define LEARNING_RATE		0.95

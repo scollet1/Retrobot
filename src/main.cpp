@@ -115,18 +115,18 @@ void play(Game *game)
 				game->getPlayer().shootBullet();
 				break;
       		
-			case 1:
+//			case 1:
 //				attron(COLOR_PAIR(5) | A_BOLD);
 //				mvprintw(game->getMaxY() / 2, (game->getMaxX() - sizeof(pause)) / 2, "%s", pause);
 //				attroff(COLOR_PAIR(5) | A_BOLD);
 //				do {
 //					uIn = (int)game->getNN()->forwardPropogate(inputs, gameTime);
 //				} while(uIn != 1);
-				break;
-			case 2:
+//				break;
+//			case 2:
 //				game->setMap(game->getPlayer().getPosY(), game->getPlayer().getPosX(), '*');
 //				game->getPlayer().triggerDeath();
-				break;
+//				break;
       		default:
         		break;
     	}
