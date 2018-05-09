@@ -351,8 +351,9 @@ void play(Game *game)
 //      		do {
  //       		uIn = getch();
   //    		} while (uIn != 'r' && uIn != KEY_END);
-      		game->getPlayer().setAliveStatus(true);
-		game->getPlayer().setLives(3);
+		game->getPlayer().setAliveStatus(true);
+		if (game->getPlayer().getLives() == 0)
+			game->getPlayer().setLives(3);
 		eKilled = 0;
     	}
 	

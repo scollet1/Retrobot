@@ -311,10 +311,10 @@ public:
 					1 - (reward / MAX_REWARD) <<
 					std::endl;*/
 					errors.push_back(
-						(((MAX_REWARD + this->_maxScore) -
-						(reward * discount)) /
+						(1 - ((MAX_REWARD + this->_maxScore) -
+						(reward * discount) /
 						(MAX_REWARD + (this->_maxScore * discount)) *
-						(this->_layers[i].getNeuron(j).activate() / NUM_OUTPUTS))
+						(1 - (this->_layers[i].getNeuron(j).activate() / NUM_OUTPUTS))))
 						//(memory[i + NUM_INPUTS] * (1 - (reward / MAX_REWARD))) - memory[i + NUM_INPUTS]
 					);
 					discount *= discount;
@@ -328,7 +328,8 @@ public:
 			for (std::vector<float>::const_iterator q = errors.begin(); q != errors.end(); q++) {
 				this->_layers[i].getNeuron(j).setDelta(*q *				// this
 				this->_layers[i].getNeuron(j).transferDeriv(				// shit
-				this->_layers[i].getNeuron(j).activate()));				// ip man kung fu ???
+				(this->_layers[i].getNeuron(j).activate() /
+				 this->_layers[i].getNeurons())));					// ip man kung fu ???
 //				std::cout << "delta == " << this->_layers[i].getNeuron(j).getDelta() << std::endl;
 				j++;
 			}
