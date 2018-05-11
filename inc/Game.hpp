@@ -23,7 +23,7 @@
 #include "Character.hpp"
 #include "Player.hpp"
 #include "NN.hpp"
-
+#include "GameMap.hpp"
 
 class Game {
 
@@ -41,10 +41,10 @@ public:
   void setMap(int y, int x, char ch);
   char getMap(int y, int x);
   Enemy & getEnemy(int y, int x);
-  void buildMaps(int sizey, int sizex);
+  void buildMap(int sizey, int sizex);
   Player& getPlayer(void);
 
-	NN *getNN() {return this->_nn;}
+	NN *getNN() {return this->_Artemis;}
 
 	int getNearestEnemy(int x, int y, int axis, int dir) {
 		int i;
@@ -81,13 +81,13 @@ public:
 	}
 
 private:
-  int     _maxX;
-  int     _maxY;
-  bool    _running;
-  Player  *_player;
-  char    **_map;
-  Enemy   **_enemies;
-	NN *_nn;
+	NN	*_Artemis;
+	int     _maxX;
+	int     _maxY;
+	bool    _running;
+	Player  *_player;
+	GameMap *_gameMap;
+	Enemy   **_enemies;
 };
 
 #endif

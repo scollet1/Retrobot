@@ -20,6 +20,7 @@ Game::Game(int y, int x)
 //	std::cout << "NN created" << std::endl;
 	_maxY = y;
 	_maxX = x;
+	this->_gameMap = buildMap(y, x);
 	return ;
 }
 
@@ -42,21 +43,11 @@ Game& Game::operator=(Game const& rhs) {
     return *this;
 };
 
-void Game::buildMaps(int sizey, int sizex)
-{
-  int i;
-
-  _enemies = new Enemy*[sizey];
-  for (i = 0; i < sizey; i++)
-    _enemies[i] = new Enemy[sizex];
-  _map = new char*[sizey];
-  for (i = 0; i < sizey; i++)
-    _map[i] = new char[sizex];
-  return ;
+void Game::buildMap(int sizey, int sizex) {
+	this->_gameMap = new GameMap(sizey, sizex);
 }
 
-int          Game::getMaxY(void)
-{
+int          Game::getMaxY(void) {
   return _maxY;
 }
 
