@@ -76,27 +76,27 @@ public:
 	}
 
 	void saveToFile(NN * nn) {
-        	ofstream fileo;
+		std::ofstream fileo;
 
-        	fileo.open("savenn.txt", ios::app);
+        	fileo.open("savenn.txt", std::ios::app);
         	for (int i = 0; i < nn->getLayers(); i++) {
         	        for (int j = 0; j < nn->getLayer(i).getNeurons(); j++) {
         	                for (int k = 0; k < nn->getLayer(i).getNeuron(j).getWeights(); k++) {
-        	                        fileo.write((float*)&nn->getLayer(i)->getNeuron(j).getWeight(k), sizeof(float));
+        	                        fileo.write((float*)&(nn->getLayer(i).getNeuron(j).getWeight(k)), sizeof(float));
         	                }
         	        }
         	}
 	}
 
 	NN * readFromFile(char * file, NN * nn) {
-        	ifstream fileo;
-        	fileo.open(file, ios::in);
+		std::ifstream fileo;
+        	fileo.open(file, std::ios::in);
         	float obj;
 
         	for (int i = 0; i < nn->getLayers(); i++) {
-        	        for (int j = 0; j < nn->getLayer(i)->getNeurons(); j++) {
+        	        for (int j = 0; j < nn->getLayer(i).getNeurons(); j++) {
 	                        for (int k = 0; k < nn->getLayer(i).getNeuron(j).getWeights(); k++) {
-                                	nn->getLayer(i)->getNeuron(j).setWeight(k, fileo.read(float*)&obj, sizeof(obj));
+                                	nn->getLayer(i).getNeuron(j).setWeight(k, fileo.read((float*)&obj, sizeof(float)));
                         	}
                 	}
         	}
