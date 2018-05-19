@@ -13,8 +13,6 @@
 #ifndef HEADER_HPP
 # define HEADER_HPP
 
-# include <iostream>
-
 // TESTING
 
 # define TEST_DISPLAY_BULLETS_WORKING "TEST DISPLAY BULLETS WORKING"

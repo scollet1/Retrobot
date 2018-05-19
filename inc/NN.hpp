@@ -4,8 +4,11 @@
 # include "Header.hpp"
 # include "Layer.hpp"
 # include "Neuron.hpp"
+# include <sys/stat.h>
 # include <math.h>
 # include <vector>
+# include <iostream>
+# include <fstream>
 
 # define MEMORY 256
 
@@ -72,25 +75,53 @@ public:
 		return *this;
 	}
 
+	void saveToFile(NN * nn) {
+        	ofstream fileo;
+
+        	fileo.open("savenn.txt", ios::app);
+        	for (int i = 0; i < nn->getLayers(); i++) {
+        	        for (int j = 0; j < nn->getLayer(i).getNeurons(); j++) {
+        	                for (int k = 0; k < nn->getLayer(i).getNeuron(j).getWeights(); k++) {
+        	                        fileo.write((float*)&nn->getLayer(i)->getNeuron(j).getWeight(k), sizeof(float));
+        	                }
+        	        }
+        	}
+	}
+
+	NN * readFromFile(char * file, NN * nn) {
+        	ifstream fileo;
+        	fileo.open(file, ios::in);
+        	float obj;
+
+        	for (int i = 0; i < nn->getLayers(); i++) {
+        	        for (int j = 0; j < nn->getLayer(i)->getNeurons(); j++) {
+	                        for (int k = 0; k < nn->getLayer(i).getNeuron(j).getWeights(); k++) {
+                                	nn->getLayer(i)->getNeuron(j).setWeight(k, fileo.read(float*)&obj, sizeof(obj));
+                        	}
+                	}
+        	}
+	}
+
+
+	bool exists (const std::string& name) {
+		struct stat buffer;   
+		
+		return (stat (name.c_str(), &buffer) == 0); 
+	}
+
 	float getLR() {
 		return this->_learningRate;
 	}
 
 	void save() {
 		/* save trained weights */
+		saveToFile(this);
 	}
 
 	void load() {
 		/* load trained weights */
-		float* loadedWeights;
-
-		for (int i = 0; i < this->_numLayers; i++) {
-			for (int j = 0; j < this->_layers->getNeurons(); j++) {
-				this->_layers->
-					getNeuron(j).
-					setWeight(j, loadedWeights[i + j]);
-			}
-		}
+		if (exists("savenn.txt"))
+			readFromFile("savenn.txt", &this);
 	}
 
 	Layer & getLayer(int i) {
@@ -107,6 +138,10 @@ public:
 
 	int getMemoryIndex() {
 		return this->_memoryIndex;
+	}
+
+	void setMemoryIndex(int num) {
+		this->_memoryIndex = num;
 	}
 
 	float * getMemory(int snapshot) {
@@ -128,6 +163,7 @@ public:
 	void remember(float * data, int snapshot) {
 		//std::cout << "MEMBERING" << std::endl;
 		int i;
+		bool t = false;
 		/* remember function takes a float array of data to be
 		indexed and stored by snapshot number,
 		this keeps the data sequential for use later by the
@@ -135,14 +171,18 @@ public:
 
 		if (snapshot >= MEMORY) {
 			//std::cout << "snap > MEMORY == " << snapshot % MEMORY << std::endl;
-			this->_memoryIndex = snapshot % MEMORY;
-		} else if (snapshot > this->_memoryIndex) {
+			//this->_memoryIndex = snapshot % MEMORY;
+			return;
+		}
+		if (snapshot > this->_memoryIndex) {
 			//std::cout << "snap > MEMINDEX == " << snapshot << std::endl;
 			this->_memoryIndex = snapshot;
+			t = true;
 		}
-
-		for (i = 0; i < NUM_INPUTS + NUM_OUTPUTS; i++) {
-			this->_memory[this->_memoryIndex][i] = data[i];
+		if (t) {
+			for (i = 0; i < NUM_INPUTS + NUM_OUTPUTS; i++) {
+				this->_memory[this->_memoryIndex][i] = data[i];
+			}
 		}
 		//std::cout << "I MEMBER" << std::endl;
 	}
@@ -196,10 +236,9 @@ public:
 		for (o = 0; o < this->_layers[this->_numLayers - 1].getNeurons(); o++)  {
 			array[o + NUM_INPUTS] =
 			this->_layers[this->_numLayers - 1].getNeuron(o).activate() / NUM_OUTPUTS;
-
-			if (this->_layers[this->_numLayers - 1].getNeuron(o).activate() / NUM_OUTPUTS > highest) {
-				highest = this->_layers[this->_numLayers - 1].
-				getNeuron(o).activate() / NUM_OUTPUTS;
+			out = this->_layers[this->_numLayers - 1].getNeuron(o).activate() / NUM_OUTPUTS;
+			if (out > highest) {
+				highest = out;
 				index = o;
 			}
 		}
@@ -335,11 +374,14 @@ public:
 			}
 		}
 
-		if (RNGf(0.0f, 1.0f) >= this->_learningRate)
-		if (RNGf(0.0f, 1.0f) >= this->_learningRate)
-			this->_learningRate *= 0.99f;
+//		if (RNGf(0.0f, 1.0f) >= this->_learningRate)
 		updateWeights(expected, memory);
 //		////std::cout << "crisis averted" << std::endl;
+	}
+
+	void adjustLR() {
+		if (RNGf(0.0f, 1.0f) >= this->_learningRate)
+			this->_learningRate *= 0.99f;
 	}
 
 	void updateWeights(float * expected, float * memory) {

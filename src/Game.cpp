@@ -17,6 +17,7 @@ Game::Game(int y, int x)
 	this->_player = new Player(y - 10, x / 2, y, x);
 //	std::cout << "creating NN" << std::endl;
 	this->_nn = new NN(NUM_INPUTS, NUM_OUTPUTS, NEURONS_PER_LAYER, NUM_LAYERS);
+	this->_nn.load();
 //	std::cout << "NN created" << std::endl;
 	_maxY = y;
 	_maxX = x;

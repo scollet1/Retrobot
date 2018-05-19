@@ -338,6 +338,9 @@ void play(Game *game)
 				eKilled);
 			} //game->getNN()->save();
 		}
+		game->getNN()->adjustLR();
+		game->getNN()->setMemoryIndex(0);
+		game->getNN()->save();
       		move(0, 0);
 //      		char deadTextDisp[] = " YOU DIED ";
 //      		char deadTextInst[] = " PRESS R TO RESPAWN OR END TO QUIT ";
